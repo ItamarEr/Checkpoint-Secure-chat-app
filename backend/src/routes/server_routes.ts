@@ -3,6 +3,8 @@ import { Router, Request, Response } from 'express';
 import User from '../models/User';
 import Room from '../models/Room';
 import Message from '../models/Message';
+import { rooms } from '../app';
+import { WebSocket } from 'ws';
 import { Types, ObjectId } from 'mongoose';
 
 const router = Router();
@@ -153,6 +155,23 @@ router.post('/rooms/:roomName/message', async (req: Request, res: Response) => {
     }
     const message = new Message({ room: roomName, user: username, content, createdAt: new Date() });
     await message.save();
+
+    // Broadcast to WebSocket clients in the room
+    const payload = {
+      type: 'message',
+      username,
+      room: roomName,
+      content,
+      timestamp: message.createdAt,
+    };
+    if (rooms[roomName]) {
+      rooms[roomName].forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(payload));
+        }
+      });
+    }
+
     res.status(201).json({ info: 'Message sent', message });
   } catch (err) {
     res.status(400).json({ error: 'Message sending failed', details: err });
