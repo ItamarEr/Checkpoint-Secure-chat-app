@@ -27,6 +27,9 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello from server');
 });
 
+const cors = require('cors');
+app.use(cors());
+
 app.use(serverRoutes.default);
 
 app.listen(port, () => {
