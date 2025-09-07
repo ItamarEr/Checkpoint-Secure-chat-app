@@ -112,8 +112,6 @@ router.delete('/rooms/:roomId', async (req: Request, res: Response) => {
 });
 
 
-
-
 // Get all messages for a room for a specific user (only messages sent after user joined)
 router.get('/rooms/:roomId/message', async (req: Request, res: Response) => {
   try {
