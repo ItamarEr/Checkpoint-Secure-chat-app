@@ -1,24 +1,25 @@
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import User from '../models/User';
 import Room from '../models/Room';
 import Message from '../models/Message';
+import { Types, ObjectId } from 'mongoose';
 
 const router = Router();
 
-router.get('/health', (req, res) => {
+router.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' });
 });
 
-router.get('/readyz', (req, res) => {
+router.get('/readyz', (req: Request, res: Response) => {
   res.status(200).json({ ready: true });
 });
 
 
 // User Registration
-router.post('/register', async (req, res) => {
+router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password }: { username: string; email: string; password: string } = req.body;
     const user = new User({ username, email, password });
     await user.save();
     res.status(201).json({ message: 'User registered', user });
@@ -28,9 +29,9 @@ router.post('/register', async (req, res) => {
 });
 
 // User Login
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password }: { email: string; password: string } = req.body;
     const user = await User.findOne({ email, password });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -43,9 +44,9 @@ router.post('/login', async (req, res) => {
 
 
 // Create Room
-router.post('/rooms', async (req, res) => {
+router.post('/rooms', async (req: Request, res: Response) => {
   try {
-    const { name, userId } = req.body;
+    const { name, userId }: { name: string; userId: string } = req.body;
     // Check if room name is unique
     const existingRoom = await Room.findOne({ name });
     if (existingRoom) {
@@ -62,9 +63,9 @@ router.post('/rooms', async (req, res) => {
         res.status(201).json({ message: 'Room created', room });
 
 // Join a room (adds user to room with join time)
-router.post('/rooms/:roomId/join', async (req, res) => {
+router.post('/rooms/:roomId/join', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.body;
+    const { userId }: { userId: Types.ObjectId | string } = req.body;
     const { roomId } = req.params;
     const room = await Room.findById(roomId);
     if (!room) {
@@ -75,10 +76,10 @@ router.post('/rooms/:roomId/join', async (req, res) => {
       return res.status(401).json({ error: 'Invalid user' });
     }
     // Check if user already in room
-    if (room.users.some(u => u.user.toString() === userId)) {
+    if (room.users.some(u => u.user.equals(userId.toString()))) {
       return res.status(400).json({ error: 'User already in room' });
     }
-    room.users.push({ user: userId, joinedAt: new Date() });
+    room.users.push({ user: new Types.ObjectId(userId), joinedAt: new Date() });
     await room.save();
     res.status(200).json({ message: 'User joined room', room });
   } catch (err) {
@@ -91,16 +92,16 @@ router.post('/rooms/:roomId/join', async (req, res) => {
 });
 
 // Delete Room (only admin)
-router.delete('/rooms/:roomId', async (req, res) => {
+router.delete('/rooms/:roomId', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.body;
+    const { userId }: { userId: ObjectId } = req.body;
     const { roomId } = req.params;
     const room = await Room.findById(roomId);
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
     }
     // Check if user is admin
-    if (!room.admins.map(id => id.toString()).includes(userId)) {
+    if (!room.admins.map(id => id.toString()).includes(userId.toString())) {
       return res.status(403).json({ error: 'Only admin can delete the room' });
     }
     await room.deleteOne();
@@ -114,7 +115,7 @@ router.delete('/rooms/:roomId', async (req, res) => {
 
 
 // Get all messages for a room for a specific user (only messages sent after user joined)
-router.get('/rooms/:roomId/message', async (req, res) => {
+router.get('/rooms/:roomId/message', async (req: Request, res: Response) => {
   try {
     const { roomId } = req.params;
     const { userId } = req.query;
@@ -141,7 +142,7 @@ router.get('/rooms/:roomId/message', async (req, res) => {
 });
 
 // Send a message to a room by a user
-router.post('/rooms/:roomId/message', async (req, res) => {
+router.post('/rooms/:roomId/message', async (req: Request, res: Response) => {
   try {
     const { roomId } = req.params;
     const { userId, content } = req.body;
