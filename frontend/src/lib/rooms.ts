@@ -28,6 +28,14 @@ export const RoomsAPI = {
   getById: (id: string) => http<Room>(`/${id}`),
   update: (roomName: string, data: Partial<Room>, username: string) =>
     http<Room>(`/${roomName}`, { method: "PUT", body: JSON.stringify({ ...data, username }) }),
-  delete: (roomName: string, username: string) =>
-    http<{ deleted: boolean }>(`/${roomName}`, { method: "DELETE", body: JSON.stringify({ username }) }),
+  delete: async (roomName: string, username: string) => {
+    const res = await fetch(`${ROOMS_URL}/${roomName}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
 };
