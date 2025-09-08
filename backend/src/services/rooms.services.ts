@@ -78,6 +78,7 @@ export const deleteRoomService = async (roomName: string, username: string): Pro
   if (!room) {
     throw new Error('Room not found');
   }
+  console.log(room.admins, username);
 
   if (!room.admins.includes(username)) {
     throw new Error('Only admin can delete the room');

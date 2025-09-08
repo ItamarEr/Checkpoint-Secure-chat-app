@@ -2,11 +2,11 @@
   "name": "chat-backend",
   "version": "1.0.0",
   "description": "Backend for CheckPoint Chat application",
-  "main": "src/server.ts",
+  "main": "src/app.ts",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+  "start": "node dist/src/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
