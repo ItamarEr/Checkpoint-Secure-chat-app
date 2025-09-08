@@ -1,39 +1,37 @@
 // src/pages/login.tsx
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { login, type LoginRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
-
-const schema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-type FormData = z.infer<typeof schema>;
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 
 export default function LoginPage() {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const { login: doLogin } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const justRegistered = params.get("registered") === "1";
+  const { login: doLogin, loading } = useAuth();
 
-  async function onSubmit(values: FormData) {
-    setServerError(null);
-    try {
-      const response = await login(values as LoginRequest);
-      doLogin(response.user);
-      navigate("/", { replace: true }); // go to homepage after login
-    } catch (e: any) {
-      setServerError(e?.response?.data?.message || "Login failed");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Login form submitted");
+    setError("");
+
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      return;
     }
-  }
+
+    try {
+      console.log("Calling doLogin...");
+      await doLogin(email, password);
+      console.log("Login successful, navigating...");
+      navigate("/", { replace: true });
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err instanceof Error ? err.message : "Login failed");
+    }
+  };
 
   return (
     <main className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-body-tertiary">
@@ -50,13 +48,13 @@ export default function LoginPage() {
             </div>
           )}
 
-          {serverError && (
+          {error && (
             <div className="alert alert-danger" role="alert">
-              {serverError}
+              {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form onSubmit={handleSubmit} noValidate>
             {/* Email */}
             <div className="mb-3">
               <label htmlFor="email" className="form-label fw-semibold">Email</label>
@@ -65,48 +63,35 @@ export default function LoginPage() {
                 type="email"
                 placeholder="you@example.com"
                 autoComplete="email"
-                className={`form-control ${errors.email ? "is-invalid" : ""}`}
-                aria-invalid={!!errors.email}
-                {...register("email")}
+                className="form-control"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
-              {errors.email && <div className="invalid-feedback">{errors.email.message}</div>}
             </div>
 
-            {/* Password with show/hide */}
+            {/* Password */}
             <div className="mb-3">
               <label htmlFor="password" className="form-label fw-semibold">Password</label>
-              <div className="input-group">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  className={`form-control ${errors.password ? "is-invalid" : ""}`}
-                  aria-invalid={!!errors.password}
-                  {...register("password")}
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-              {errors.password && <div className="invalid-feedback d-block">{errors.password.message}</div>}
+              <input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                className="form-control"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
 
             {/* Submit */}
             <button
               type="submit"
               className="btn btn-primary w-100"
-              disabled={isSubmitting}
+              disabled={loading}
             >
-              {isSubmitting && (
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-              )}
-              Sign in
+              {loading ? "Logging in..." : "Sign in"}
             </button>
 
             <div className="text-center mt-3">
