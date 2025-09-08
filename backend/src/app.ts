@@ -2,17 +2,22 @@ import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
 import errorHandler from './middleware/errorHandler';
-import apiRouter from './routes/api.routes';
-import { authRouter } from './routes/auth.route';
+import serverRouter from './routes/server_routes';
 import roomRouter from './routes/rooms.route';
-import messagesRouter from './routes/messages.route';
-
+import messageRouter from './routes/messages.route';
+import authRouter from './routes/auth.route';
 const app = express();
 
-// CORS Middleware
+const allowedOrigins = ['http://localhost:3000'];
 app.use(cors({
-  origin: true, // Allow requests from any origin
-  credentials: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
 
 // Body Parsers
@@ -20,10 +25,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // API Routes
-app.use('/api', apiRouter);
-app.use('/rooms', roomRouter);
 app.use('/auth', authRouter);
-app.use('/messages', messagesRouter);
+app.use('/rooms', roomRouter);
+app.use('/messages', messageRouter); 
+app.use('/api', serverRouter); // Main API routes
+
 
 // Error Handler Middleware
 app.use(errorHandler);
