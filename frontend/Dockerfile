@@ -9,6 +9,9 @@ RUN npm install
 # Copy the rest of your app's source code
 COPY . .
 
+# Build the frontend before starting preview
+RUN npm run build
+
 # Expose the port your app runs on
 EXPOSE ${FRONT_END_PORT}
 
