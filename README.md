@@ -1,7 +1,7 @@
 # Checkpoint Chat
 
 A secure, Dockerized chat application with modular microservices for backend, frontend, security gateway, and QA. Built with Node.js, TypeScript, React, Express, and VirusTotal integration for real-time DLP and URL threat detection.
-I was the backend developer as part of a team in the "Exellenteam in academy" program in collaboration with Check Point.
+I was the backend developer as part of a team in the "Excellenteam in academy" program in collaboration with Check Point.
 
 ## Features
 - **Modern Chat App**: Real-time messaging, authentication, and room management
